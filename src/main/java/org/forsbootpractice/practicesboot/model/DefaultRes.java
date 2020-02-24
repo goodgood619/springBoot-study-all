@@ -7,11 +7,14 @@ import lombok.NoArgsConstructor;
 import org.forsbootpractice.practicesboot.utils.ResponseMessage;
 import org.forsbootpractice.practicesboot.utils.StatusCode;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EnableAsync
 public class DefaultRes<T> {
     private int status;
     private String message;

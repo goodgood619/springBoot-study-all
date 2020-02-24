@@ -7,25 +7,37 @@ import org.forsbootpractice.practicesboot.model.DefaultRes;
 import org.forsbootpractice.practicesboot.model.SignUpReq;
 import org.forsbootpractice.practicesboot.utils.ResponseMessage;
 import org.forsbootpractice.practicesboot.utils.StatusCode;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
+
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 @Slf4j
 @Service
+@EnableAsync
 public class UserService {
     private final UserMapper userMapper;
     private final S3FileUploadService s3FileUploadService;
-
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+    private ThreadPoolTaskExecutor one;
     /**
      * 생성자 의존성 주입
-     *
      * @param userMapper
      * @param s3FileUploadService
+     * @param threadPoolTaskExecutor
+     * @param one
      */
-    public UserService(final UserMapper userMapper, final S3FileUploadService s3FileUploadService) {
+    public UserService(final UserMapper userMapper, final S3FileUploadService s3FileUploadService, ThreadPoolTaskExecutor threadPoolTaskExecutor, ThreadPoolTaskExecutor one) {
         this.userMapper = userMapper;
         this.s3FileUploadService = s3FileUploadService;
+        this.threadPoolTaskExecutor = threadPoolTaskExecutor;
+        this.one = one;
     }
 
     /**
@@ -33,11 +45,25 @@ public class UserService {
      *
      * @return DefaultRes
      */
-    public DefaultRes getAllUsers() {
-        final List<User> userList = userMapper.findAll();
-        if (userList.isEmpty())
-            return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
-        return DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, userList);
+    @Async("one")
+    public CompletableFuture<List<User>> getAllUsers() throws ExecutionException, InterruptedException {
+//        CompletableFuture<List<User>> userList = CompletableFuture.allOf(userMapper.findAll());
+//        CompletableFuture<DefaultRes> res = userList.thenApplyAsync(p->{
+//            if(p.isEmpty()) return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
+//            return DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, userList);
+//        },threadPoolTaskExecutor);
+//        return res.join();
+//        final List<User> userList = userMapper.findAll();
+        return CompletableFuture.supplyAsync(userMapper::findAll,one);
+//        return CompletableFuture.supplyAsync(userMapper::findAll,threadPoolTaskExecutor)
+//                .thenComposeAsync(result-> CompletableFuture.supplyAsync(()->{
+//                    log.info("thenComposeAsync ok");
+//                    if(result.isEmpty()) return DefaultRes.res(StatusCode.NOT_FOUND,ResponseMessage.NOT_FOUND_USER);
+//                    return DefaultRes.res(StatusCode.OK,ResponseMessage.READ_USER,result);
+//                },threadPoolTaskExecutor));
+//        log.info("use DispatcherServletThread?");
+//        DefaultRes t = res.get();
+//        return t;
     }
 
     /**
@@ -50,6 +76,7 @@ public class UserService {
         final User user = userMapper.findByName(name);
         if (user == null)
             return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
+        log.info("{}",DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, user));
         return DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, user);
     }
     /**

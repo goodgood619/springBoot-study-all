@@ -5,10 +5,13 @@ import org.forsbootpractice.practicesboot.dto.User;
 import org.forsbootpractice.practicesboot.model.SignUpReq;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Mapper
 public interface UserMapper {
 
+//        @Select("select * from user")
+//        CompletableFuture<List<User>> findAll();
     @Select("select * from user")
     List<User> findAll();
 
@@ -34,7 +37,7 @@ public interface UserMapper {
     void save2(@Param("user") final User user);
 
     @Update("update user set name = #{user.name}, part = #{user.part} where userIdx = #{userIdx}")
-    void update(@Param("userIdx") final int userIdx,@Param("user") final User user);
+    void update(@Param("userIdx") final int userIdx, @Param("user") final User user);
 
     @Delete("delete from user where userIdx = #{userIdx}")
     void deleteByUserIdx(@Param("userIdx") final int userIdx);
