@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -81,12 +82,21 @@ public class UserService {
      * @param name 이름
      * @return DefaultRes
      */
-    public DefaultRes findByName(final String name) {
-        final User user = userMapper.findByName(name);
-        if (user == null)
-            return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
-        log.info("{}",DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, user));
-        return DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, user);
+    @Async("one")
+    public CompletableFuture<DefaultRes> findByName(final String name) {
+        return CompletableFuture.supplyAsync(() -> {
+            log.info("one");
+            return CompletableFuture.supplyAsync(()->userMapper.findByName(name),one);
+        },three).thenCompose(s -> CompletableFuture.supplyAsync(() -> {
+            log.info("two");
+            if (s.join() == null) return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
+            return DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, s.join());
+        },two));
+//        final User user = userMapper.findByName(name);
+//        if (user == null)
+//            return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
+//        log.info("{}",DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, user));
+//        return DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, user);
     }
     /**
      * 회원 가입
@@ -95,19 +105,44 @@ public class UserService {
      * @return DefaultRes
      */
     @Transactional
-    public DefaultRes save(SignUpReq signUpReq) {
-        try {
-            //파일이 있다면 파일을 S3에 저장 후 경로를 저장
-            if (signUpReq.getProfile() != null)
-                signUpReq.setProfileUrl(s3FileUploadService.upload(signUpReq.getProfile()));
-            userMapper.save(signUpReq);
-            return DefaultRes.res(StatusCode.CREATED, ResponseMessage.CREATED_USER);
-        } catch (Exception e) {
-            //Rollback
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            log.error(e.getMessage());
-            return DefaultRes.res(StatusCode.DB_ERROR, ResponseMessage.DB_ERROR);
+    @Async("one")
+    public CompletableFuture<DefaultRes> save(SignUpReq signUpReq) {
+        CompletableFuture<DefaultRes> s3fileuploadasync = CompletableFuture.supplyAsync(()->{
+            if(signUpReq.getProfile()!=null) {
+                try {
+                    signUpReq.setProfileUrl(s3FileUploadService.upload(signUpReq.getProfile()));
+                } catch (IOException e) {
+                    TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                    log.error(e.getMessage());
+                }
+            }
+            return signUpReq;
+        },one).thenApply((s)->{
+            try {
+                userMapper.save(s);
+            }
+            catch (Exception e) {
+                log.error("{}",e.getMessage());
+                return DefaultRes.res(StatusCode.DB_ERROR,ResponseMessage.DB_ERROR);
+            }
+            return null;
+        });
+        if(s3fileuploadasync == null) {
+            return CompletableFuture.supplyAsync(()-> DefaultRes.res(StatusCode.CREATED,ResponseMessage.CREATED_USER));
         }
+        else return s3fileuploadasync;
+//        try {
+//            //파일이 있다면 파일을 S3에 저장 후 경로를 저장(얘는 따로 처리해도 됨 ㅇㅇ,아래 3개로직 전부다,근데 맨 마지막 DefaultRes는 필요하긴 하지 ㅇㅇ)
+//            if (signUpReq.getProfile() != null)
+//                signUpReq.setProfileUrl(s3FileUploadService.upload(signUpReq.getProfile()));
+//            userMapper.save(signUpReq);
+//            return DefaultRes.res(StatusCode.CREATED, ResponseMessage.CREATED_USER);
+//        } catch (Exception e) {
+//            //Rollback
+//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+//            log.error(e.getMessage());
+//            return DefaultRes.res(StatusCode.DB_ERROR, ResponseMessage.DB_ERROR);
+//        }
     }
     /**
      * 회원 정보 수정

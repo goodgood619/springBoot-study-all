@@ -20,7 +20,9 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import static java.util.concurrent.CompletableFuture.runAsync;
 import static org.forsbootpractice.practicesboot.model.DefaultRes.FAIL_DEFAULT_RES;
+import static org.forsbootpractice.practicesboot.model.DefaultRes.res;
 
 @Slf4j
 @RestController
@@ -43,12 +45,10 @@ public class UserController {
         try {
             //name이 null일 경우 false, null이 아닐 경우 true
             if (name.isPresent()) {
-                result = CompletableFuture.completedFuture(new ResponseEntity<>(userService.findByName(name.get()), HttpStatus.OK));
+                result = CompletableFuture.completedFuture(new ResponseEntity<>(userService.findByName(name.get()).get(), HttpStatus.OK));
             } else {
                 result = CompletableFuture.completedFuture(new ResponseEntity<>(userService.getAllUsers().get(), HttpStatus.OK));
             }
-
-
         } catch (Exception e) {
             log.error(e.getMessage());
             result = CompletableFuture.completedFuture(new ResponseEntity<>(FAIL_DEFAULT_RES, HttpStatus.INTERNAL_SERVER_ERROR));
@@ -78,18 +78,25 @@ public class UserController {
     //@RequestPart
     //value = "profile" 파일의 키 값은 profile
     //required = false 파일을 필수로 받지 않겠다.
+    @Async("threadPoolTaskExecutor")
     @PostMapping("")
-    public ResponseEntity signup(
+    public CompletableFuture<ResponseEntity> signup(
             SignUpReq signUpReq,
             @RequestPart(value = "profile", required = false) final MultipartFile profile) {
+        CompletableFuture<ResponseEntity> ret;
         try {
             //파일을 signUpReq에 저장
-            if (profile != null) signUpReq.setProfile(profile);
-            return new ResponseEntity<>(userService.save(signUpReq), HttpStatus.OK);
+//            if (profile != null) signUpReq.setProfile(profile);
+//            return CompletableFuture.completedFuture(new ResponseEntity<>(userService.save(signUpReq), HttpStatus.OK));
+           ret= CompletableFuture.supplyAsync(()->{
+                if(profile!= null) signUpReq.setProfile(profile);
+                return signUpReq;
+            }).thenApply(s-> new ResponseEntity<>(userService.save(s).join(),HttpStatus.OK));
         } catch (Exception e) {
             log.error(e.getMessage());
-            return new ResponseEntity<>(FAIL_DEFAULT_RES, HttpStatus.INTERNAL_SERVER_ERROR);
+            ret = CompletableFuture.completedFuture(new ResponseEntity<>(FAIL_DEFAULT_RES, HttpStatus.INTERNAL_SERVER_ERROR));
         }
+        return ret;
     }
 
     /**
