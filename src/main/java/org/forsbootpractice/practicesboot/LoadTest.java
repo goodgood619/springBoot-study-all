@@ -41,6 +41,7 @@ public class LoadTest {
 //                String res = rt.getForObject(localurl, String.class,idx);
                 testp res = rt.postForObject(localurl3,p,testp.class,idx);
                 stopWatch.stop();
+                //testcommit
                 log.info("Elapsed: {} {} / {} {}" ,idx,stopWatch.getTotalTimeSeconds(),res.name,res.part);
                 return null;
             });
