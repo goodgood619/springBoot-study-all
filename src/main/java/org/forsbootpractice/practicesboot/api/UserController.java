@@ -30,14 +30,10 @@ public class UserController {
     private final UserService userService;
     private final JwtService jwtService;
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
-    private ThreadPoolTaskExecutor two;
-    private ThreadPoolTaskExecutor three;
-    public UserController(final UserService userService, final JwtService jwtService, final ThreadPoolTaskExecutor threadPoolTaskExecutor, ThreadPoolTaskExecutor two, ThreadPoolTaskExecutor three) {
+    public UserController(final UserService userService, final JwtService jwtService, final ThreadPoolTaskExecutor threadPoolTaskExecutor) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.threadPoolTaskExecutor = threadPoolTaskExecutor;
-        this.two = two;
-        this.three = three;
     }
 
     @Async("threadPoolTaskExecutor")
@@ -49,24 +45,7 @@ public class UserController {
             if (name.isPresent()) {
                 result = CompletableFuture.completedFuture(new ResponseEntity<>(userService.findByName(name.get()), HttpStatus.OK));
             } else {
-                CompletableFuture<DefaultRes> ret = CompletableFuture.supplyAsync(() -> {
-                    try {
-                        log.info("one");
-                        return userService.getAllUsers();
-                    } catch (ExecutionException e) {
-                        log.info("{}", e.getMessage());
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
-                        log.info("{}",e.getMessage());
-                        e.printStackTrace();
-                    }
-                    return null;
-                },three).thenCompose(s -> CompletableFuture.supplyAsync(() -> {
-                    log.info("two");
-                    if (s.join().isEmpty()) return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
-                    return DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, s.join());
-                },two));
-                result = CompletableFuture.completedFuture(new ResponseEntity<>(ret.get(), HttpStatus.OK));
+                result = CompletableFuture.completedFuture(new ResponseEntity<>(userService.getAllUsers().get(), HttpStatus.OK));
             }
 
 

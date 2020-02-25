@@ -25,7 +25,7 @@ public class TaskConfig {
     @Bean
     public ThreadPoolTaskExecutor one() {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setCorePoolSize(5);
+        taskExecutor.setCorePoolSize(6);
         taskExecutor.setMaxPoolSize(50);
         taskExecutor.setQueueCapacity(1001);
         taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
@@ -38,7 +38,7 @@ public class TaskConfig {
     @Bean
     public ThreadPoolTaskExecutor two() {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setCorePoolSize(5);
+        taskExecutor.setCorePoolSize(6);
         taskExecutor.setMaxPoolSize(50);
         taskExecutor.setQueueCapacity(1001);
         taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
@@ -50,7 +50,7 @@ public class TaskConfig {
     @Bean
     public ThreadPoolTaskExecutor three() {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setCorePoolSize(5);
+        taskExecutor.setCorePoolSize(6);
         taskExecutor.setMaxPoolSize(50);
         taskExecutor.setQueueCapacity(1001);
         taskExecutor.setWaitForTasksToCompleteOnShutdown(true);

@@ -24,20 +24,21 @@ import java.util.concurrent.ExecutionException;
 public class UserService {
     private final UserMapper userMapper;
     private final S3FileUploadService s3FileUploadService;
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
-    private ThreadPoolTaskExecutor one;
+    private ThreadPoolTaskExecutor one,two,three;
     /**
      * 생성자 의존성 주입
      * @param userMapper
      * @param s3FileUploadService
-     * @param threadPoolTaskExecutor
      * @param one
+     * @param two
+     * @param three
      */
-    public UserService(final UserMapper userMapper, final S3FileUploadService s3FileUploadService, ThreadPoolTaskExecutor threadPoolTaskExecutor, ThreadPoolTaskExecutor one) {
+    public UserService(final UserMapper userMapper, final S3FileUploadService s3FileUploadService, ThreadPoolTaskExecutor one,ThreadPoolTaskExecutor two, ThreadPoolTaskExecutor three) {
         this.userMapper = userMapper;
         this.s3FileUploadService = s3FileUploadService;
-        this.threadPoolTaskExecutor = threadPoolTaskExecutor;
         this.one = one;
+        this.two = two;
+        this.three = three;
     }
 
     /**
@@ -46,7 +47,7 @@ public class UserService {
      * @return DefaultRes
      */
     @Async("one")
-    public CompletableFuture<List<User>> getAllUsers() throws ExecutionException, InterruptedException {
+    public CompletableFuture<DefaultRes> getAllUsers() throws ExecutionException, InterruptedException {
 //        CompletableFuture<List<User>> userList = CompletableFuture.allOf(userMapper.findAll());
 //        CompletableFuture<DefaultRes> res = userList.thenApplyAsync(p->{
 //            if(p.isEmpty()) return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
@@ -54,7 +55,15 @@ public class UserService {
 //        },threadPoolTaskExecutor);
 //        return res.join();
 //        final List<User> userList = userMapper.findAll();
-        return CompletableFuture.supplyAsync(userMapper::findAll,one);
+        return CompletableFuture.supplyAsync(() -> {
+                log.info("one");
+                return CompletableFuture.supplyAsync(userMapper::findAll,one);
+        },three).thenCompose(s -> CompletableFuture.supplyAsync(() -> {
+            log.info("two");
+            if (s.join().isEmpty()) return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
+            return DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, s.join());
+        },two));
+//        return CompletableFuture.supplyAsync(userMapper::findAll,one);
 //        return CompletableFuture.supplyAsync(userMapper::findAll,threadPoolTaskExecutor)
 //                .thenComposeAsync(result-> CompletableFuture.supplyAsync(()->{
 //                    log.info("thenComposeAsync ok");
