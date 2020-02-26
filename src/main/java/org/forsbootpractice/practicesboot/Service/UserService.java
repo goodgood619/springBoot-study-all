@@ -186,9 +186,11 @@ public class UserService {
     public CompletableFuture<DefaultRes> deleteByUserIdx(final int userIdx) {
         return CompletableFuture.supplyAsync(()-> userMapper.findByUserIdx(userIdx),one)
                 .thenApply(res-> {
-                    log.info("{}",res.getProfileUrl().substring(60));
                     if(res == null) return DefaultRes.res(StatusCode.NOT_FOUND,ResponseMessage.NOT_FOUND_USER);
-                    s3FileUploadService.deleteOnS3(res.getProfileUrl().substring(60));
+                    if(res.getProfileUrl()!= null) {
+                        log.info("{}", res.getProfileUrl().substring(60));
+                        s3FileUploadService.deleteOnS3(res.getProfileUrl().substring(60));
+                    }
                     try {
                         userMapper.deleteByUserIdx(userIdx);
                         return DefaultRes.res(StatusCode.NO_CONTENT, ResponseMessage.DELETE_USER);
