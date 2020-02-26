@@ -57,13 +57,20 @@ public class UserService {
 //        return res.join();
 //        final List<User> userList = userMapper.findAll();
         return CompletableFuture.supplyAsync(() -> {
-                log.info("one");
+                String temp = Thread.currentThread().getName();
+                log.info("first : {}",temp);
+                log.info("first: {} second : {}",temp,Thread.currentThread().getName());
                 return CompletableFuture.supplyAsync(userMapper::findAll,one);
-        },three).thenCompose(s -> CompletableFuture.supplyAsync(() -> {
-            log.info("two");
-            if (s.join().isEmpty()) return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
+        },three).thenApply(s -> {
+            String temp = Thread.currentThread().getName();
+            log.info("first : {}",temp);
+            if (s.join().isEmpty()) {
+                log.info("{}",Thread.currentThread().getName());
+                return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
+            }
+            log.info("second: {} and first : {}",Thread.currentThread().getName(),temp);
             return DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, s.join());
-        },two));
+        });
 //        return CompletableFuture.supplyAsync(userMapper::findAll,one);
 //        return CompletableFuture.supplyAsync(userMapper::findAll,threadPoolTaskExecutor)
 //                .thenComposeAsync(result-> CompletableFuture.supplyAsync(()->{
@@ -87,11 +94,10 @@ public class UserService {
         return CompletableFuture.supplyAsync(() -> {
             log.info("one");
             return CompletableFuture.supplyAsync(()->userMapper.findByName(name),one);
-        },three).thenCompose(s -> CompletableFuture.supplyAsync(() -> {
-            log.info("two");
+        },three).thenApply(s -> {
             if (s.join() == null) return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
             return DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, s.join());
-        },two));
+        });
 //        final User user = userMapper.findByName(name);
 //        if (user == null)
 //            return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
@@ -105,7 +111,7 @@ public class UserService {
      * @return DefaultRes
      */
     @Transactional
-    @Async("one")
+    @Async("two")
     public CompletableFuture<DefaultRes> save(SignUpReq signUpReq) {
         CompletableFuture<DefaultRes> s3fileuploadasync = CompletableFuture.supplyAsync(()->{
             if(signUpReq.getProfile()!=null) {
@@ -117,7 +123,7 @@ public class UserService {
                 }
             }
             return signUpReq;
-        },one).thenApply((s)->{
+        },two).thenApply(s->{
             try {
                 userMapper.save(s);
             }
@@ -175,19 +181,35 @@ public class UserService {
      * @param userIdx 회원 고유 번호
      * @return DefaultRes
      */
+    @Async("one")
     @Transactional
-    public DefaultRes deleteByUserIdx(final int userIdx) {
-        final User user = userMapper.findByUserIdx(userIdx);
-        if (user == null)
-            return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
-        try {
-            userMapper.deleteByUserIdx(userIdx);
-            return DefaultRes.res(StatusCode.NO_CONTENT, ResponseMessage.DELETE_USER);
-        } catch (Exception e) {
-            //Rollback
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            log.error(e.getMessage());
-            return DefaultRes.res(StatusCode.DB_ERROR, ResponseMessage.DB_ERROR);
-        }
+    public CompletableFuture<DefaultRes> deleteByUserIdx(final int userIdx) {
+        return CompletableFuture.supplyAsync(()-> userMapper.findByUserIdx(userIdx),one)
+                .thenApply(res-> {
+                    log.info("{}",res.getProfileUrl().substring(60));
+                    if(res == null) return DefaultRes.res(StatusCode.NOT_FOUND,ResponseMessage.NOT_FOUND_USER);
+                    s3FileUploadService.deleteOnS3(res.getProfileUrl().substring(60));
+                    try {
+                        userMapper.deleteByUserIdx(userIdx);
+                        return DefaultRes.res(StatusCode.NO_CONTENT, ResponseMessage.DELETE_USER);
+                    }
+                    catch (Exception e) {
+                        TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                        log.error(e.getMessage());
+                        return DefaultRes.res(StatusCode.DB_ERROR,ResponseMessage.DB_ERROR);
+                    }
+                });
+//        final User user = userMapper.findByUserIdx(userIdx);
+//        if (user == null)
+//            return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
+//        try {
+//            userMapper.deleteByUserIdx(userIdx);
+//            return DefaultRes.res(StatusCode.NO_CONTENT, ResponseMessage.DELETE_USER);
+//        } catch (Exception e) {
+//            //Rollback
+//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+//            log.error(e.getMessage());
+//            return DefaultRes.res(StatusCode.DB_ERROR, ResponseMessage.DB_ERROR);
+//        }
     }
 }

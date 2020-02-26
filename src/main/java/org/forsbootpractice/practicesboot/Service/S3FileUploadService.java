@@ -63,6 +63,12 @@ public class S3FileUploadService {
         return UUID.randomUUID().toString().replaceAll("-", "");
     }
 
+
+    //S3에 있는 파일을 삭제한다
+    public void deleteOnS3(final String fileName) {
+        amazonS3Client.deleteObject(bucket,fileName);
+    }
+    
     //S3에 파일을 업로드한다.
     private void uploadOnS3(final String fileName, final File file) {
         //AWS S3 전송 객체 생성
@@ -74,10 +80,8 @@ public class S3FileUploadService {
         try {
             //완료 확인
             upload.waitForCompletion();
-        } catch (AmazonClientException amazonClientException) {
+        } catch (AmazonClientException | InterruptedException amazonClientException) {
             log.error(amazonClientException.getMessage());
-        } catch (InterruptedException e) {
-            log.error(e.getMessage());
         }
     }
 

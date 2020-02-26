@@ -3,10 +3,7 @@ package org.forsbootpractice.practicesboot.api;
 import lombok.extern.slf4j.Slf4j;
 import org.forsbootpractice.practicesboot.Service.JwtService;
 import org.forsbootpractice.practicesboot.Service.UserService;
-import org.forsbootpractice.practicesboot.model.DefaultRes;
 import org.forsbootpractice.practicesboot.model.SignUpReq;
-import org.forsbootpractice.practicesboot.utils.ResponseMessage;
-import org.forsbootpractice.practicesboot.utils.StatusCode;
 import org.forsbootpractice.practicesboot.utils.auth.Auth;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,11 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
-import static java.util.concurrent.CompletableFuture.runAsync;
 import static org.forsbootpractice.practicesboot.model.DefaultRes.FAIL_DEFAULT_RES;
-import static org.forsbootpractice.practicesboot.model.DefaultRes.res;
 
 @Slf4j
 @RestController
@@ -32,6 +26,7 @@ public class UserController {
     private final UserService userService;
     private final JwtService jwtService;
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
     public UserController(final UserService userService, final JwtService jwtService, final ThreadPoolTaskExecutor threadPoolTaskExecutor) {
         this.userService = userService;
         this.jwtService = jwtService;
@@ -83,20 +78,18 @@ public class UserController {
     public CompletableFuture<ResponseEntity> signup(
             SignUpReq signUpReq,
             @RequestPart(value = "profile", required = false) final MultipartFile profile) {
-        CompletableFuture<ResponseEntity> ret;
         try {
             //파일을 signUpReq에 저장
 //            if (profile != null) signUpReq.setProfile(profile);
 //            return CompletableFuture.completedFuture(new ResponseEntity<>(userService.save(signUpReq), HttpStatus.OK));
-           ret= CompletableFuture.supplyAsync(()->{
-                if(profile!= null) signUpReq.setProfile(profile);
+            return CompletableFuture.supplyAsync(() -> {
+                if (profile != null) signUpReq.setProfile(profile);
                 return signUpReq;
-            }).thenApply(s-> new ResponseEntity<>(userService.save(s).join(),HttpStatus.OK));
+            }).thenApply(s -> new ResponseEntity<>(userService.save(s).join(), HttpStatus.OK));
         } catch (Exception e) {
             log.error(e.getMessage());
-            ret = CompletableFuture.completedFuture(new ResponseEntity<>(FAIL_DEFAULT_RES, HttpStatus.INTERNAL_SERVER_ERROR));
+            return CompletableFuture.completedFuture(new ResponseEntity<>(FAIL_DEFAULT_RES, HttpStatus.INTERNAL_SERVER_ERROR));
         }
-        return ret;
     }
 
     /**
@@ -110,6 +103,7 @@ public class UserController {
 
     @Auth
     @PutMapping("/{userIdx}")
+    @Async("threadPoolTaskExecutor")
     public ResponseEntity signUp(
             @PathVariable(value = "userIdx") final int userIdx,
             SignUpReq signUpReq,
@@ -133,12 +127,13 @@ public class UserController {
 
     @Auth
     @DeleteMapping("/{userIdx}")
-    public ResponseEntity deleteUser(@PathVariable(value = "userIdx") final int userIdx) {
+    @Async("threadPoolTaskExecutor")
+    public CompletableFuture<ResponseEntity> deleteUser(@PathVariable(value = "userIdx") final int userIdx) {
         try {
-            return new ResponseEntity<>(userService.deleteByUserIdx(userIdx), HttpStatus.OK);
+            return CompletableFuture.completedFuture(new ResponseEntity<>(userService.deleteByUserIdx(userIdx).join(), HttpStatus.OK));
         } catch (Exception e) {
             log.error(e.getMessage());
-            return new ResponseEntity<>(FAIL_DEFAULT_RES, HttpStatus.INTERNAL_SERVER_ERROR);
+            return CompletableFuture.completedFuture(new ResponseEntity<>(FAIL_DEFAULT_RES, HttpStatus.INTERNAL_SERVER_ERROR));
         }
     }
 }
