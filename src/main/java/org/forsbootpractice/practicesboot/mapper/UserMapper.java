@@ -5,7 +5,6 @@ import org.forsbootpractice.practicesboot.dto.User;
 import org.forsbootpractice.practicesboot.model.SignUpReq;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @Mapper
 public interface UserMapper {

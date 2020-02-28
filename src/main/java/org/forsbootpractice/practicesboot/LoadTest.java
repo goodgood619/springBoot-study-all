@@ -20,17 +20,17 @@ public class LoadTest {
     static AtomicInteger counter = new AtomicInteger(0);
 
     public static void main(String[] args) throws BrokenBarrierException, InterruptedException {
-        ExecutorService es = Executors.newFixedThreadPool(3);
+        ExecutorService es = Executors.newFixedThreadPool(100);
         RestTemplate rt = new RestTemplate();
 //        String url = "http://ec2-52-79-169-96.ap-northeast-2.compute.amazonaws.com:8080/users";
         String localurl = "http://localhost:8080/users?name=으으";
 //        String localurl2 = "http://localhost:8080/users";
         String localurl3 = "http://localhost:8080/users";
-        CyclicBarrier barrier = new CyclicBarrier(4);
+        CyclicBarrier barrier = new CyclicBarrier(101);
 
         StopWatch main = new StopWatch();
         main.start();
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 100; i++) {
             int temp = i;
             es.submit(() -> {
                 int idx = counter.addAndGet(1);
@@ -41,18 +41,18 @@ public class LoadTest {
 
                 StopWatch stopWatch = new StopWatch();
                 stopWatch.start();
-                //get test
-//                ResponseEntity<String> res= rt.getForEntity(localurl3,String.class,idx);
+//                get test
+                ResponseEntity<String> res= rt.getForEntity(localurl3,String.class,idx);
                 //for delete
-                if (temp == 0) {
-                    rt.delete("http://localhost:8080/users/264");
-                } else if (temp == 1) {
-                    rt.delete("http://localhost:8080/users/265");
-                } else {
-                    rt.delete("http://localhost:8080/users/266");
-                }
+//                if (temp == 0) {
+//                    rt.delete("http://localhost:8080/users/264");
+//                } else if (temp == 1) {
+//                    rt.delete("http://localhost:8080/users/265");
+//                } else {
+//                    rt.delete("http://localhost:8080/users/266");
+//                }
                 stopWatch.stop();
-//                log.info("Elapsed: {} {} / {} {}" ,idx,stopWatch.getTotalTimeSeconds(),res.getStatusCode(),res.getBody());
+                log.info("Elapsed: {} {} / {} {}" ,idx,stopWatch.getTotalTimeSeconds(),res.getStatusCode(),res.getBody());
                 return null;
             });
         }

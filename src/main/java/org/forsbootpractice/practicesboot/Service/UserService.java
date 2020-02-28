@@ -57,7 +57,12 @@ public class UserService {
 //        return res.join();
 //        final List<User> userList = userMapper.findAll();
         return CompletableFuture.supplyAsync(() -> {
-                String temp = Thread.currentThread().getName();
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            String temp = Thread.currentThread().getName();
                 log.info("first : {}",temp);
                 log.info("first: {} second : {}",temp,Thread.currentThread().getName());
                 return CompletableFuture.supplyAsync(userMapper::findAll,one);
