@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.forsbootpractice.practicesboot.utils.ResponseMessage;
 import org.forsbootpractice.practicesboot.utils.StatusCode;
-import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @Getter
@@ -19,20 +17,24 @@ public class DefaultRes<T> {
     private int status;
     private String message;
     private T data;
+
     public DefaultRes(final int status, final String message) {
         this.status = status;
         this.message = message;
         this.data = null;
     }
-    public static<T> DefaultRes<T> res(final int status, final String message) {
+
+    public static <T> DefaultRes<T> res(final int status, final String message) {
         return res(status, message, null);
     }
-    public static<T> DefaultRes<T> res(final int status, final String message, final T t) {
+
+    public static <T> DefaultRes<T> res(final int status, final String message, final T t) {
         return DefaultRes.<T>builder()
                 .data(t)
                 .status(status)
                 .message(message)
                 .build();
     }
+
     public static final DefaultRes FAIL_DEFAULT_RES = new DefaultRes(StatusCode.INTERNAL_SERVER_ERROR, ResponseMessage.INTERNAL_SERVER_ERROR);
 }

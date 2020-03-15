@@ -26,8 +26,10 @@ public class LoadTest {
         String localurl = "http://localhost:8080/users?name=으으";
 //        String localurl2 = "http://localhost:8080/users";
         String localurl3 = "http://localhost:8080/users";
+        String toeicurl = "http://localhost:8080/toeic";
         CyclicBarrier barrier = new CyclicBarrier(101);
-
+//        List<User> ret = rt.exchange("http://localhost:8080", HttpMethod.GET, null, new ParameterizedTypeReference<List<User>>() {
+//        }).getBody();
         StopWatch main = new StopWatch();
         main.start();
         for (int i = 0; i < 100; i++) {
@@ -42,7 +44,8 @@ public class LoadTest {
                 StopWatch stopWatch = new StopWatch();
                 stopWatch.start();
 //                get test
-                ResponseEntity<String> res= rt.getForEntity(localurl3,String.class,idx);
+//                ResponseEntity<String> res = rt.getForEntity(localurl3, String.class, idx);
+                ResponseEntity<String> res= rt.getForEntity(toeicurl,String.class,idx);
                 //for delete
 //                if (temp == 0) {
 //                    rt.delete("http://localhost:8080/users/264");
@@ -52,7 +55,7 @@ public class LoadTest {
 //                    rt.delete("http://localhost:8080/users/266");
 //                }
                 stopWatch.stop();
-                log.info("Elapsed: {} {} / {} {}" ,idx,stopWatch.getTotalTimeSeconds(),res.getStatusCode(),res.getBody());
+                log.info("Elapsed: {} {} / {} {}", idx, stopWatch.getTotalTimeSeconds(), res.getStatusCode(), res.getBody());
                 return null;
             });
         }
@@ -63,6 +66,18 @@ public class LoadTest {
 
         main.stop();
         log.info("Total : {}", main.getTotalTimeSeconds());
+    }
+
+    private static class User {
+        String name;
+
+        public User(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
     }
 
     //postTest
@@ -97,6 +112,7 @@ public class LoadTest {
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(map, headers);
         return rt.postForEntity(localurl, request, String.class);
     }
+
     // for delete test
     private static void forDeleteTest(int temp) {
         RestTemplate rt = new RestTemplate();

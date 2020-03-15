@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -58,22 +57,15 @@ public class UserService {
 //        final List<User> userList = userMapper.findAll();
         return CompletableFuture.supplyAsync(() -> {
             try {
-                Thread.sleep(5000);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            String temp = Thread.currentThread().getName();
-                log.info("first : {}",temp);
-                log.info("first: {} second : {}",temp,Thread.currentThread().getName());
                 return CompletableFuture.supplyAsync(userMapper::findAll,one);
         },three).thenApply(s -> {
-            String temp = Thread.currentThread().getName();
-            log.info("first : {}",temp);
             if (s.join().isEmpty()) {
-                log.info("{}",Thread.currentThread().getName());
                 return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
             }
-            log.info("second: {} and first : {}",Thread.currentThread().getName(),temp);
             return DefaultRes.res(StatusCode.OK, ResponseMessage.READ_USER, s.join());
         });
 //        return CompletableFuture.supplyAsync(userMapper::findAll,one);
