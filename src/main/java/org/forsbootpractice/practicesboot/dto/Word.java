@@ -3,8 +3,7 @@ package org.forsbootpractice.practicesboot.dto;
 import lombok.Data;
 
 @Data
-public class Toeic {
-    private int toeicIdx;
+public class Word {
     private String korean;
     private String english;
 }

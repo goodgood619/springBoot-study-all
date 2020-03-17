@@ -1,8 +1,8 @@
 package org.forsbootpractice.practicesboot.Service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.forsbootpractice.practicesboot.dto.Toeic;
-import org.forsbootpractice.practicesboot.mapper.ToeicMapper;
+import org.forsbootpractice.practicesboot.dto.Word;
+import org.forsbootpractice.practicesboot.mapper.WordMapper;
 import org.forsbootpractice.practicesboot.model.DefaultRes;
 import org.forsbootpractice.practicesboot.utils.ResponseMessage;
 import org.forsbootpractice.practicesboot.utils.StatusCode;
@@ -11,17 +11,18 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
 @EnableAsync
-public class ToeicService {
-    private final ToeicMapper toeicMapper;
+public class WordService {
+    private final WordMapper wordMapper;
     private ThreadPoolTaskExecutor one, two, three;
 
-    public ToeicService(ToeicMapper toeicMapper, ThreadPoolTaskExecutor one, ThreadPoolTaskExecutor two, ThreadPoolTaskExecutor three) {
-        this.toeicMapper = toeicMapper;
+    public WordService(WordMapper wordMapper, ThreadPoolTaskExecutor one, ThreadPoolTaskExecutor two, ThreadPoolTaskExecutor three) {
+        this.wordMapper = wordMapper;
         this.one = one;
         this.two = two;
         this.three = three;
@@ -29,7 +30,16 @@ public class ToeicService {
 
     @Async("two")
     public CompletableFuture<DefaultRes> getAllToeic() {
-        return CompletableFuture.supplyAsync(() -> CompletableFuture.supplyAsync(toeicMapper::findAll, two), one).thenApply(s -> {
+        return getDefaultResCompletableFuture(CompletableFuture.supplyAsync(wordMapper::toeicfindAll, two));
+    }
+
+    @Async("two")
+    public CompletableFuture<DefaultRes> getAllToss() {
+        return getDefaultResCompletableFuture(CompletableFuture.supplyAsync(wordMapper::tossfindAll, two));
+    }
+
+    private CompletableFuture<DefaultRes> getDefaultResCompletableFuture(CompletableFuture<List<Word>> listCompletableFuture) {
+        return CompletableFuture.supplyAsync(() -> listCompletableFuture, one).thenApply(s -> {
             if (s.join().isEmpty()) {
                 return DefaultRes.res(StatusCode.NOT_FOUND, ResponseMessage.NOT_FOUND_USER);
             }
@@ -38,9 +48,9 @@ public class ToeicService {
     }
 
     @Async("two")
-    public CompletableFuture<DefaultRes> save(Toeic toeic) {
+    public CompletableFuture<DefaultRes> save(Word toeic) {
         try {
-            toeicMapper.save2(toeic);
+            wordMapper.save2(toeic);
         } catch (Exception e) {
             log.error("{}", e.getMessage());
             return CompletableFuture.supplyAsync(() -> DefaultRes.res(StatusCode.DB_ERROR, ResponseMessage.DB_ERROR));

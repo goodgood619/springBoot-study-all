@@ -1,8 +1,8 @@
 package org.forsbootpractice.practicesboot.api;
 
 import lombok.extern.slf4j.Slf4j;
-import org.forsbootpractice.practicesboot.Service.ToeicService;
-import org.forsbootpractice.practicesboot.dto.Toeic;
+import org.forsbootpractice.practicesboot.Service.WordService;
+import org.forsbootpractice.practicesboot.dto.Word;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -17,26 +17,29 @@ import static org.forsbootpractice.practicesboot.model.DefaultRes.FAIL_DEFAULT_R
 
 @Slf4j
 @RestController
-@RequestMapping("/toeic")
+@RequestMapping("/word")
 @EnableAsync
-public class ToeicController {
-    private final ToeicService toeicService;
+public class WordController {
+    private final WordService wordService;
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
-    public ToeicController(final ToeicService toeicService, ThreadPoolTaskExecutor threadPoolTaskExecutor) {
-        this.toeicService = toeicService;
+    public WordController(final WordService wordService, ThreadPoolTaskExecutor threadPoolTaskExecutor) {
+        this.wordService = wordService;
         this.threadPoolTaskExecutor = threadPoolTaskExecutor;
     }
 
     @Async("threadPoolTaskExecutor")
     @GetMapping("")
-    public CompletableFuture<ResponseEntity> getToeic(@RequestParam("korean") final Optional<String> korean) {
+    public CompletableFuture<ResponseEntity> getToeic(@RequestParam("category") final Optional<Integer> category) {
         CompletableFuture<ResponseEntity> ret = new CompletableFuture<>();
         try {
-            if (korean.isPresent()) {
-                //ret = CompletableFuture.completedFuture(new ResponseEntity<>(,HttpStatus.OK));
-            } else
-                ret = CompletableFuture.completedFuture(new ResponseEntity<>(toeicService.getAllToeic().get(), HttpStatus.OK));
+            switch (category.get()) {
+                case 1:
+                    ret = CompletableFuture.completedFuture(new ResponseEntity<>(wordService.getAllToeic().get(), HttpStatus.OK));
+                    break;
+                case 2:
+                    ret = CompletableFuture.completedFuture(new ResponseEntity<>(wordService.getAllToss().get(),HttpStatus.OK));
+            }
         } catch (Exception e) {
             log.error("getToeic Exception {} ", e.getMessage());
             ret = CompletableFuture.completedFuture(new ResponseEntity<>(FAIL_DEFAULT_RES, HttpStatus.INTERNAL_SERVER_ERROR));
@@ -46,9 +49,9 @@ public class ToeicController {
 
     @Async("threadPoolTaskExecutor")
     @PostMapping("")
-    public CompletableFuture<ResponseEntity> saveToeic(Toeic toeic) {
+    public CompletableFuture<ResponseEntity> saveToeic(Word toeic) {
         try {
-            return CompletableFuture.completedFuture(new ResponseEntity<>(toeicService.save(toeic).join(), HttpStatus.OK));
+            return CompletableFuture.completedFuture(new ResponseEntity<>(wordService.save(toeic).join(), HttpStatus.OK));
         }catch (Exception e) {
             log.error(e.getMessage());
             return CompletableFuture.completedFuture(new ResponseEntity<>(FAIL_DEFAULT_RES, HttpStatus.INTERNAL_SERVER_ERROR));
