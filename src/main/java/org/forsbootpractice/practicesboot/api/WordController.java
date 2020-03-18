@@ -2,6 +2,8 @@ package org.forsbootpractice.practicesboot.api;
 
 import lombok.extern.slf4j.Slf4j;
 import org.forsbootpractice.practicesboot.Service.WordService;
+import org.forsbootpractice.practicesboot.dto.Toeic;
+import org.forsbootpractice.practicesboot.dto.Toss;
 import org.forsbootpractice.practicesboot.dto.Word;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,12 +51,13 @@ public class WordController {
 
     @Async("threadPoolTaskExecutor")
     @PostMapping("")
-    public CompletableFuture<ResponseEntity> saveToeic(Word toeic) {
+    public CompletableFuture<ResponseEntity> saveToeic(Toeic toeic) {
         try {
-            return CompletableFuture.completedFuture(new ResponseEntity<>(wordService.save(toeic).join(), HttpStatus.OK));
+            return CompletableFuture.completedFuture(new ResponseEntity<>(wordService.getToeicsave(toeic).join(), HttpStatus.OK));
         }catch (Exception e) {
             log.error(e.getMessage());
             return CompletableFuture.completedFuture(new ResponseEntity<>(FAIL_DEFAULT_RES, HttpStatus.INTERNAL_SERVER_ERROR));
         }
     }
+
 }
