@@ -44,8 +44,8 @@ public class LoadTest {
                 StopWatch stopWatch = new StopWatch();
                 stopWatch.start();
 //                get test
-//                ResponseEntity<String> res = rt.getForEntity(localurl3, String.class, idx);
-                ResponseEntity<String> res= rt.getForEntity(toeicurl,String.class,idx);
+                ResponseEntity<String> res = rt.getForEntity(localurl3, String.class, idx);
+//                ResponseEntity<String> res= rt.getForEntity(toeicurl,String.class,idx);
                 //for delete
 //                if (temp == 0) {
 //                    rt.delete("http://localhost:8080/users/264");

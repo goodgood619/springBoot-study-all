@@ -84,5 +84,4 @@ public class S3FileUploadService {
             log.error(amazonClientException.getMessage());
         }
     }
-
 }
