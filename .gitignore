@@ -5,6 +5,7 @@ target/
 !**/src/test/**
 
 application.properties
+real-application.yml
 ### STS ###
 .apt_generated
 .classpath
