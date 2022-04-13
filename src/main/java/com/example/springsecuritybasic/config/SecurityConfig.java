@@ -33,7 +33,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .loginPage("/loginForm")
 //        .usernameParameter("username2") // controller로 들어오는 username의 변수명이 username2 일때 username으로 매핑해주는 곳임
         .loginProcessingUrl("/login") // login 주소가 호출이 되면 Spring Security가 낚아채서 대신 로그인을 진행한다
-        .defaultSuccessUrl("/");
+        .defaultSuccessUrl("/")
+        .and()
+        .oauth2Login()
+        .loginPage("/loginForm"); // google 로그인이 완료된 뒤의 후처리가 필요함
   }
 
 }
