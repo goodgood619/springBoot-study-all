@@ -19,6 +19,7 @@ public class PrincipalDetailsService implements UserDetailsService {
   // parameter에서 넘어오는 변수명 (username)이 일치해야 한다.
   // 만약 일치하지 않으면, Spring SecurityConfig를 가서 Mapping을 별도로 해준다
   // Security Session (내부 Authentication (내부 UserDetails))
+  // 함수 종료시 @AuthenticationPrincipal Annotation이 만들어 진다
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
