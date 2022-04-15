@@ -26,22 +26,22 @@ spring:
       client:
         registration:
           google:
-            client-id: xxx
-            client-secret: xxx
+            client-id: 251067417328-hmbpagmvne63bmlvkvr6e9ub9k65ifo5.apps.googleusercontent.com
+            client-secret: fjJsMK695R2a3hdL_2aAszRQ
             scope:
               - email
               - profile
 
           facebook:
-            client-id: xxx
-            client-secret: xxx
+            client-id: 5621262121231904
+            client-secret: 407621277f9c6c60020d23ef6d838545
             scope:
               - email
               - public_profile # https://developers.facebook.com/docs/facebook-login/web/ (샘플 명세서에 있음)
 
           naver:
-            client-id: xxx
-            client-secret: xxx
+            client-id: 78RUY8DL4__eoaIX1GW6
+            client-secret: 2BlHze6b3e
             scope:
               - name
               - email
