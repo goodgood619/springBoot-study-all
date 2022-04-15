@@ -24,6 +24,7 @@ public class PrincipalOauth2UserService extends DefaultOAuth2UserService {
     }
 
     // 구글로부터 받은 userRequest 데이터에 대한 후처리되는 함수
+    // 함수 종료시 @AuthenticationPrincipal Annotation이 만들어 진다
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         System.out.println("getClientRegistration : " + userRequest.getClientRegistration());
