@@ -7,17 +7,27 @@ package com.example.springsecuritybasic.config.auth;
 import com.example.springsecuritybasic.model.User;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 @Data
-public class PrincipalDetails implements UserDetails {
+public class PrincipalDetails implements UserDetails, OAuth2User {
 
   private User user; // has-a (composition)
+  private Map<String, Object> attributes;
 
+  // 일반로그인용 생성자
   public PrincipalDetails(User user) {
     this.user = user;
+  }
+
+  // OAuth용 생성자
+  public PrincipalDetails(User user, Map<String, Object> attributes) {
+    this.user = user;
+    this.attributes = attributes;
   }
 
   // 해당 User의 권한을 return 하는 곳
@@ -69,4 +79,15 @@ public class PrincipalDetails implements UserDetails {
 
     return true;
   }
+
+  @Override
+  public Map<String, Object> getAttributes() {
+    return attributes;
+  }
+
+  @Override
+  public String getName() {
+    return null;
+  }
+
 }
