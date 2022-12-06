@@ -1,0 +1,14 @@
+version: '3.3'
+
+services:
+  db:
+    platform: linux/x86_64 # 개발환경이 M1 이기 때문에, x86_64로 동작 할수 있게 해놨음
+    image: mysql:5.7
+    restart: always
+    container_name: spring_security_basic
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - '33060:3306'
+    expose:
+      - '33060'
